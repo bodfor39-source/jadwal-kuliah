@@ -1,9 +1,11 @@
 let jadwal = JSON.parse(localStorage.getItem('jadwal')) || [];
 const namaHari = ["", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 let lastNotified = {}; 
+let editIndex = -1;
 
 document.addEventListener('DOMContentLoaded', () => {
     renderTable();
+    updateNotifStatus();
     if (Notification.permission !== "granted") {
         const banner = document.getElementById('perm-banner');
         if(banner) banner.style.display = 'block';
@@ -11,35 +13,71 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(checkJadwal, 30000); 
 });
 
+function updateNotifStatus() {
+    const btn = document.getElementById('btnNotifStatus');
+    if (!btn) return;
+    if (Notification.permission === "granted") {
+        btn.innerText = "Notif: On";
+        btn.style.backgroundColor = "#28a745";
+    } else {
+        btn.innerText = "Notif: Off";
+        btn.style.backgroundColor = "#6c757d";
+    }
+}
+
 function aktifkanFitur() {
-    Notification.requestPermission();
-    new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').load();
-    const banner = document.getElementById('perm-banner');
-    if(banner) banner.style.display = 'none';
-    document.getElementById('statusNotif').innerText = "Status: Memantau jadwal...";
+    Notification.requestPermission().then(() => {
+        updateNotifStatus();
+        new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').load();
+        const banner = document.getElementById('perm-banner');
+        if(banner) banner.style.display = 'none';
+        document.getElementById('statusNotif').innerText = "Status: Memantau jadwal...";
+    });
 }
 
 function renderTable(data = jadwal) {
     const body = document.getElementById('jadwalBody');
     body.innerHTML = data.map((j, i) => `
-        <tr><td>${j.nama}</td><td>${namaHari[j.hari]}</td><td>${j.jam}</td>
-        <td><button class="btn-hapus" onclick="hapus(${i})">x</button></td></tr>
+        <tr>
+            <td>${j.nama}<br><small style="color: #666;">Dosen: ${j.dosen || '-'}</small></td>
+            <td>${namaHari[j.hari]}</td>
+            <td>${j.jam}</td>
+            <td>
+                <button onclick="editJadwal(${i})">Edit</button>
+                <button class="btn-hapus" onclick="hapus(${i})">x</button>
+            </td>
+        </tr>
     `).join('');
 }
 
-function filterHari(hariTarget) {
-    const dataFilter = jadwal.filter(j => j.hari === hariTarget);
-    renderTable(dataFilter);
+function editJadwal(i) {
+    editIndex = i;
+    const j = jadwal[i];
+    document.getElementById('nama').value = j.nama;
+    document.getElementById('jam').value = j.jam;
+    document.getElementById('hari').value = j.hari;
+    document.getElementById('waktuIngatkan').value = j.ingatkan || 0;
+    document.getElementById('btnTambah').innerText = "Update Jadwal";
 }
 
 function tambahManual() {
     const item = {
         nama: document.getElementById('nama').value,
         jam: document.getElementById('jam').value,
-        hari: parseInt(document.getElementById('hari').value)
+        hari: parseInt(document.getElementById('hari').value),
+        dosen: editIndex === -1 ? "-" : jadwal[editIndex].dosen,
+        ingatkan: parseInt(document.getElementById('waktuIngatkan').value)
     };
     if(!item.nama || !item.jam) return alert("Lengkapi data!");
-    jadwal.push(item);
+
+    if (editIndex === -1) {
+        jadwal.push(item);
+    } else {
+        jadwal[editIndex] = item;
+        editIndex = -1;
+        document.getElementById('btnTambah').innerText = "Tambah Jadwal";
+    }
+    document.getElementById('nama').value = "";
     saveAndRender();
 }
 
@@ -52,23 +90,25 @@ async function prosesGambar() {
         const { data: { text } } = await Tesseract.recognize(file, 'ind');
         const hariMap = { "senin": 1, "selasa": 2, "rabu": 3, "kamis": 4, "jumat": 5, "sabtu": 6 };
         let hariTerakhir = 1;
+        const lines = text.split('\n');
 
-        text.split('\n').forEach(line => {
+        lines.forEach((line, i) => {
             const lowerLine = line.toLowerCase();
             for (let h in hariMap) if (lowerLine.includes(h)) hariTerakhir = hariMap[h];
-            
             const match = line.match(/\d{2}:\d{2}/);
             if (match) {
                 jadwal.push({ 
-                    nama: line.replace(match[0], '').trim() || "MK Scan", 
+                    nama: lines[i-1] ? lines[i-1].trim() : "MK Scan", 
                     jam: match[0], 
-                    hari: hariTerakhir 
+                    dosen: lines[i+1] ? lines[i+1].trim() : "-",
+                    hari: hariTerakhir,
+                    ingatkan: 0
                 });
             }
         });
         saveAndRender();
         document.getElementById('statusNotif').innerText = "Berhasil diimpor!";
-    } catch (e) { alert("Gagal memproses gambar."); }
+    } catch (e) { alert("Gagal memproses."); }
 }
 
 function checkJadwal() {
@@ -76,27 +116,19 @@ function checkJadwal() {
     const menitSkrg = (now.getHours() * 60) + now.getMinutes();
     const hariSkrg = now.getDay() === 0 ? 7 : now.getDay(); 
     
-    // Reset lastNotified jika sudah ganti hari agar notif bisa muncul lagi besok
     const tglHariIni = now.toDateString();
-    if (lastNotified.date !== tglHariIni) {
-        lastNotified = { date: tglHariIni };
-    }
+    if (lastNotified.date !== tglHariIni) lastNotified = { date: tglHariIni };
 
     jadwal.forEach((j, index) => {
         if (j.hari !== hariSkrg) return;
-        
         const [h, m] = j.jam.split(':').map(Number);
-        const jadwalMenit = (h * 60 + m);
-        const selisih = jadwalMenit - menitSkrg;
+        const targetMenit = (h * 60 + m) - (j.ingatkan || 0);
 
-        if ([120, 60, 0].includes(selisih)) {
-            const key = `${index}-${selisih}`;
-            
+        if (menitSkrg === targetMenit) {
+            const key = `${index}-${targetMenit}`;
             if (!lastNotified[key]) {
-                let judul = selisih === 0 ? "Waktunya Kuliah!" : "Pengingat Persiapan";
-                let pesan = selisih === 0 ? `Sekarang kelas: ${j.nama}` : `${selisih/60} jam lagi: ${j.nama}`;
-                
-                triggerNotif(judul, pesan);
+                triggerNotif(j.ingatkan === 0 ? "Waktunya Kuliah!" : "Persiapan Kelas", 
+                             `Kelas: ${j.nama} dengan Dosen: ${j.dosen}`);
                 lastNotified[key] = true; 
             }
         }
@@ -110,12 +142,6 @@ function triggerNotif(judul, pesan) {
     }
 }
 
-function saveAndRender() { 
-    localStorage.setItem('jadwal', JSON.stringify(jadwal)); 
-    renderTable(); 
-}
-
-function hapus(i) { 
-    jadwal.splice(i, 1); 
-    saveAndRender(); 
-}
+function saveAndRender() { localStorage.setItem('jadwal', JSON.stringify(jadwal)); renderTable(); }
+function hapus(i) { jadwal.splice(i, 1); saveAndRender(); }
+function filterHari(h) { renderTable(jadwal.filter(j => j.hari === h)); }

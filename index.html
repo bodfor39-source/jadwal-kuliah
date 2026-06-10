@@ -35,6 +35,12 @@
                 <option value="5">Jumat</option>
                 <option value="6">Sabtu</option>
             </select>
+            <select id="waktuIngatkan">
+                <option value="0">Tepat Waktu</option>
+                <option value="15">15 menit sebelum</option>
+                <option value="30">30 menit sebelum</option>
+                <option value="60">1 jam sebelum</option>
+            </select>
             <button id="btnTambah" onclick="tambahManual()" class="btn-primary">Tambah Jadwal</button>
         </div>
 
@@ -46,7 +52,7 @@
         <table id="jadwalTable">
             <thead>
                 <tr>
-                    <th>Mata Kuliah</th>
+                    <th>Mata Kuliah & Dosen</th>
                     <th>Hari</th>
                     <th>Jam</th>
                     <th>Aksi</th>
