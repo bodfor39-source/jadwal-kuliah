@@ -1,7 +1,7 @@
 let jadwal = JSON.parse(localStorage.getItem('jadwal')) || [];
 const namaHari = ["", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 let lastNotified = {}; 
-let editIndex = -1;
+let editIndex = -1; 
 
 document.addEventListener('DOMContentLoaded', () => {
     renderTable();
@@ -81,11 +81,41 @@ function tambahManual() {
     saveAndRender();
 }
 
+// FUNGSI BARU: Mendeteksi apakah file Excel atau Gambar
+async function prosesFile() {
+    const input = document.getElementById('uploadGambar');
+    const file = input.files[0];
+    if (!file) return alert("Pilih file gambar atau Excel!");
+    document.getElementById('statusNotif').innerText = "Memproses...";
+
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(worksheet);
+            
+            json.forEach(row => {
+                jadwal.push({ 
+                    nama: row.Nama || "MK Excel", 
+                    jam: row.Jam || "00:00", 
+                    hari: parseInt(row.Hari) || 1, 
+                    dosen: row.Dosen || "-",
+                    ingatkan: 0 
+                });
+            });
+            saveAndRender();
+            document.getElementById('statusNotif').innerText = "Berhasil impor Excel!";
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        prosesGambar(); // Tetap jalankan OCR jika bukan Excel
+    }
+}
+
 async function prosesGambar() {
     const file = document.getElementById('uploadGambar').files[0];
-    if (!file) return alert("Pilih gambar!");
-    document.getElementById('statusNotif').innerText = "Memproses gambar...";
-
     try {
         const { data: { text } } = await Tesseract.recognize(file, 'ind');
         const hariMap = { "senin": 1, "selasa": 2, "rabu": 3, "kamis": 4, "jumat": 5, "sabtu": 6 };
@@ -108,7 +138,7 @@ async function prosesGambar() {
         });
         saveAndRender();
         document.getElementById('statusNotif').innerText = "Berhasil diimpor!";
-    } catch (e) { alert("Gagal memproses."); }
+    } catch (e) { alert("Gagal memproses gambar."); }
 }
 
 function checkJadwal() {
