@@ -81,7 +81,6 @@ function tambahManual() {
     saveAndRender();
 }
 
-// FUNGSI BARU: Mendeteksi apakah file Excel atau Gambar
 async function prosesFile() {
     const input = document.getElementById('uploadGambar');
     const file = input.files[0];
@@ -95,33 +94,24 @@ async function prosesFile() {
             const workbook = XLSX.read(data, {type: 'array'});
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             const json = XLSX.utils.sheet_to_json(worksheet);
-            
             json.forEach(row => {
-                jadwal.push({ 
-                    nama: row.Nama || "MK Excel", 
-                    jam: row.Jam || "00:00", 
-                    hari: parseInt(row.Hari) || 1, 
-                    dosen: row.Dosen || "-",
-                    ingatkan: 0 
-                });
+                jadwal.push({ nama: row.Nama, jam: row.Jam, hari: row.Hari, dosen: row.Dosen, ingatkan: 0 });
             });
             saveAndRender();
             document.getElementById('statusNotif').innerText = "Berhasil impor Excel!";
         };
         reader.readAsArrayBuffer(file);
     } else {
-        prosesGambar(); // Tetap jalankan OCR jika bukan Excel
+        jalankanOCR(file);
     }
 }
 
-async function prosesGambar() {
-    const file = document.getElementById('uploadGambar').files[0];
+async function jalankanOCR(file) {
     try {
         const { data: { text } } = await Tesseract.recognize(file, 'ind');
         const hariMap = { "senin": 1, "selasa": 2, "rabu": 3, "kamis": 4, "jumat": 5, "sabtu": 6 };
         let hariTerakhir = 1;
         const lines = text.split('\n');
-
         lines.forEach((line, i) => {
             const lowerLine = line.toLowerCase();
             for (let h in hariMap) if (lowerLine.includes(h)) hariTerakhir = hariMap[h];
