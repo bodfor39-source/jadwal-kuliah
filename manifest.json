@@ -1,0 +1,22 @@
+{
+  "name": "Jadwal Kuliah Pro",
+  "short_name": "JadwalPro",
+  "description": "Aplikasi pengingat jadwal kuliah pintar dengan fitur OCR.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#005696",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2904/2904975.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2904/2904975.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

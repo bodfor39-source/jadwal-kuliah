@@ -1,0 +1,67 @@
+:root {
+    --kci-blue: #005696;
+    --bg-color: #F4F7F9;
+    --danger-red: #d9534f;
+}
+
+body { 
+    background: var(--bg-color); 
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    display: flex; 
+    justify-content: center; 
+    padding: 20px; 
+}
+
+.card { 
+    background: white; 
+    width: 100%; 
+    max-width: 600px; 
+    padding: 24px; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+}
+
+h1 { 
+    color: var(--kci-blue); 
+    border-bottom: 3px solid var(--kci-blue); 
+    padding-bottom: 10px; 
+    font-size: 24px;
+}
+
+/* Status Bar & Filter */
+.status-bar { font-size: 13px; color: #666; margin-bottom: 15px; font-style: italic; }
+.filter-group { margin-bottom: 20px; display: flex; gap: 8px; }
+
+/* Styling Tabel ala KCI */
+table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+th { background: var(--kci-blue); color: white; padding: 12px; text-align: left; font-weight: 600; }
+td { padding: 12px; border-bottom: 1px solid #ddd; color: #333; }
+tr:nth-child(even) { background-color: #f8f9fa; }
+
+/* Tombol */
+button { 
+    background: var(--kci-blue); 
+    color: white; 
+    border: none; 
+    padding: 10px 16px; 
+    cursor: pointer; 
+    border-radius: 4px; 
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+button:hover { opacity: 0.9; }
+
+.btn-secondary { background: #6c757d; }
+.btn-hapus { 
+    background: var(--danger-red); 
+    padding: 6px 12px; 
+    font-size: 12px; 
+}
+
+/* Input */
+input, select { 
+    padding: 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    margin-right: 5px; 
+}

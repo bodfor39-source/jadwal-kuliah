@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Kuliah Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+</head>
+<body>
+    <div class="card">
+        <h1>Jadwal Perkuliahan</h1>
+        
+        <div id="perm-banner" onclick="aktifkanFitur()" style="background:#005696; color:white; padding:12px; text-align:center; cursor:pointer; margin-bottom:15px; border-radius:4px; display:none; font-weight:bold;">
+            Klik di sini untuk mengaktifkan Notifikasi & Alarm
+        </div>
+
+        <div id="statusNotif" class="status-bar">Status: Memantau jadwal...</div>
+        
+        <div class="filter-group" style="margin-bottom: 20px;">
+            <button onclick="renderTable()">Semua</button>
+            <button onclick="filterHari(1)">Senin</button>
+            <button onclick="filterHari(3)">Rabu</button>
+            <button onclick="filterHari(5)">Jumat</button>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="nama" placeholder="Nama Mata Kuliah">
+            <input type="time" id="jam">
+            <select id="hari">
+                <option value="1">Senin</option><option value="2">Selasa</option>
+                <option value="3">Rabu</option><option value="4">Kamis</option>
+                <option value="5">Jumat</option>
+            </select>
+            <button onclick="tambahManual()" class="btn-primary">Tambah</button>
+        </div>
+
+        <div class="ocr-group">
+            <input type="file" id="uploadGambar" accept="image/*">
+            <button onclick="prosesGambar()" class="btn-secondary">Impor Gambar (OCR)</button>
+        </div>
+
+        <table id="jadwalTable">
+            <thead>
+                <tr>
+                    <th>Mata Kuliah</th>
+                    <th>Hari</th>
+                    <th>Jam</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="jadwalBody"></tbody>
+        </table>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
