@@ -58,6 +58,7 @@ function editJadwal(i) {
     document.getElementById('hari').value = j.hari;
     document.getElementById('waktuIngatkan').value = j.ingatkan || 0;
     document.getElementById('btnTambah').innerText = "Update Jadwal";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function tambahManual() {
@@ -66,7 +67,7 @@ function tambahManual() {
         jam: document.getElementById('jam').value,
         hari: parseInt(document.getElementById('hari').value),
         dosen: editIndex === -1 ? "-" : jadwal[editIndex].dosen,
-        ingatkan: parseInt(document.getElementById('waktuIngatkan').value)
+        ingatkan: parseInt(document.getElementById('waktuIngatkan').value) || 0
     };
     if(!item.nama || !item.jam) return alert("Lengkapi data!");
 
@@ -95,7 +96,7 @@ async function prosesFile() {
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             const json = XLSX.utils.sheet_to_json(worksheet);
             json.forEach(row => {
-                jadwal.push({ nama: row.Nama, jam: row.Jam, hari: row.Hari, dosen: row.Dosen, ingatkan: 0 });
+                jadwal.push({ nama: row.Nama || "MK Excel", jam: row.Jam || "00:00", hari: parseInt(row.Hari) || 1, dosen: row.Dosen || "-", ingatkan: 0 });
             });
             saveAndRender();
             document.getElementById('statusNotif').innerText = "Berhasil impor Excel!";
@@ -147,8 +148,9 @@ function checkJadwal() {
         if (menitSkrg === targetMenit) {
             const key = `${index}-${targetMenit}`;
             if (!lastNotified[key]) {
+                const pesan = j.ingatkan > 0 ? `Dimulai dalam ${j.ingatkan} menit.` : `Sekarang!`;
                 triggerNotif(j.ingatkan === 0 ? "Waktunya Kuliah!" : "Persiapan Kelas", 
-                             `Kelas: ${j.nama} dengan Dosen: ${j.dosen}`);
+                             `Kelas: ${j.nama} | Dosen: ${j.dosen} | ${pesan}`);
                 lastNotified[key] = true; 
             }
         }
