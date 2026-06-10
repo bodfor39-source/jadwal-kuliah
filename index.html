@@ -23,6 +23,7 @@
             <button onclick="filterHari(1)">Senin</button>
             <button onclick="filterHari(3)">Rabu</button>
             <button onclick="filterHari(5)">Jumat</button>
+            <button id="btnNotifStatus" style="background:#6c757d; cursor:default;">Notif: Off</button>
         </div>
 
         <div class="input-group">
@@ -32,11 +33,12 @@
                 <option value="1">Senin</option><option value="2">Selasa</option>
                 <option value="3">Rabu</option><option value="4">Kamis</option>
                 <option value="5">Jumat</option>
+                <option value="6">Sabtu</option>
             </select>
-            <button onclick="tambahManual()" class="btn-primary">Tambah</button>
+            <button id="btnTambah" onclick="tambahManual()" class="btn-primary">Tambah Jadwal</button>
         </div>
 
-        <div class="ocr-group">
+        <div class="ocr-group" style="margin-top: 15px;">
             <input type="file" id="uploadGambar" accept="image/*">
             <button onclick="prosesGambar()" class="btn-secondary">Impor Gambar (OCR)</button>
         </div>

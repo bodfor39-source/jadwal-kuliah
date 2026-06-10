@@ -5,7 +5,8 @@ let lastNotified = {};
 document.addEventListener('DOMContentLoaded', () => {
     renderTable();
     if (Notification.permission !== "granted") {
-        document.getElementById('perm-banner').style.display = 'block';
+        const banner = document.getElementById('perm-banner');
+        if(banner) banner.style.display = 'block';
     }
     setInterval(checkJadwal, 30000); 
 });
@@ -13,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function aktifkanFitur() {
     Notification.requestPermission();
     new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').load();
-    document.getElementById('perm-banner').style.display = 'none';
+    const banner = document.getElementById('perm-banner');
+    if(banner) banner.style.display = 'none';
     document.getElementById('statusNotif').innerText = "Status: Memantau jadwal...";
 }
 
@@ -69,12 +71,17 @@ async function prosesGambar() {
     } catch (e) { alert("Gagal memproses gambar."); }
 }
 
-// LOGIKA UPDATE: Memastikan pengecekan waktu presisi
 function checkJadwal() {
     const now = new Date();
     const menitSkrg = (now.getHours() * 60) + now.getMinutes();
-    const hariSkrg = now.getDay() === 0 ? 7 : now.getDay(); // Konversi Minggu 0 jadi 7 agar sesuai array kita
+    const hariSkrg = now.getDay() === 0 ? 7 : now.getDay(); 
     
+    // Reset lastNotified jika sudah ganti hari agar notif bisa muncul lagi besok
+    const tglHariIni = now.toDateString();
+    if (lastNotified.date !== tglHariIni) {
+        lastNotified = { date: tglHariIni };
+    }
+
     jadwal.forEach((j, index) => {
         if (j.hari !== hariSkrg) return;
         
@@ -83,14 +90,14 @@ function checkJadwal() {
         const selisih = jadwalMenit - menitSkrg;
 
         if ([120, 60, 0].includes(selisih)) {
-            const key = `${index}-${selisih}-${now.getDate()}-${now.getHours()}-${now.getMinutes()}`;
+            const key = `${index}-${selisih}`;
             
             if (!lastNotified[key]) {
                 let judul = selisih === 0 ? "Waktunya Kuliah!" : "Pengingat Persiapan";
                 let pesan = selisih === 0 ? `Sekarang kelas: ${j.nama}` : `${selisih/60} jam lagi: ${j.nama}`;
                 
                 triggerNotif(judul, pesan);
-                lastNotified[key] = true;
+                lastNotified[key] = true; 
             }
         }
     });
@@ -98,7 +105,7 @@ function checkJadwal() {
 
 function triggerNotif(judul, pesan) {
     if (Notification.permission === "granted") {
-        new Notification(judul, { body: pesan });
+        new Notification(judul, { body: pesan, icon: 'https://cdn-icons-png.flaticon.com/512/2904/2904975.png' });
         new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
     }
 }
